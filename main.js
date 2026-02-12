@@ -44,6 +44,14 @@ canvas.addEventListener("click", (e) => {
     });
 });
 
+//enemies
+const enemies = [];
+enemies.push({
+    x: 100,
+    y: 100,
+    radius: 20
+});
+
 //key-press
 const keys = {};
 
@@ -55,20 +63,6 @@ window.addEventListener("keyup", (e) => {
     keys[e.key.toLowerCase()] = false;
 });
 
-
-//gameplay-loop
-let lastTime = 0;
-
-function gameLoop(timestamp) {
-    const deltaTime = (timestamp - lastTime) / 1000;
-    lastTime = timestamp;
-
-    update(deltaTime);
-    drawPlayer();
-    drawBullets();
-
-    requestAnimationFrame(gameLoop);
-}
 
 //player-spawn
 function drawPlayer() {
@@ -95,8 +89,19 @@ function drawBullets() {
     });
 }
 
-//player-action
-function update(deltaTime) {
+//enemy-spawn
+function drawEnemies(){
+    enemies.forEach(enemy => {
+        ctx.beginPath();
+        ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI*2);
+        ctx.fillStyle = "red";
+        ctx.fill();
+    });
+}
+
+
+//updatePlayer
+function updatePlayer(deltaTime){
     player.vx = 0;
     player.vy = 0;
 
@@ -117,15 +122,69 @@ function update(deltaTime) {
     player.y += player.vy * player.speed * deltaTime;
     player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
     player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
-
-    //bullet-shot
-    bullets.forEach(bullet => {
-        bullet.x += bullet.vx * deltaTime;
-        bullet.y += bullet.vy * deltaTime;
-    });
-    
 }
 
+//updateBullets
+function updateBullets(deltaTime){
+    //bullet-shot
+        bullets.forEach(bullet => {
+            bullet.x += bullet.vx * deltaTime;
+            bullet.y += bullet.vy * deltaTime;
+        });
+}
+
+
+//collisions
+function handleCollision(){
+
+    bullets.forEach((bullet, bIndex) => {
+        enemies.forEach((enemy, eIndex) => {
+            if (isColliding(bullet, enemy)) {
+                enemies.splice(eIndex, 1);
+                bullets.splice(bIndex, 1);
+            }
+        });
+    });
+}
+
+//collision-check
+function isColliding(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    return distance < a.radius + b.radius;
+}
+
+
+//render-assets
+function render(){
+    drawPlayer();
+    drawBullets();
+    drawEnemies();
+}
+
+//game-update
+function update(deltaTime) {
+    updatePlayer(deltaTime);
+    updateBullets(deltaTime);
+    //updateEnemies(deltaTime);
+
+    handleCollision();
+}
+
+//gameplay-loop
+let lastTime = 0;
+
+function gameLoop(timestamp) {
+    const deltaTime = (timestamp - lastTime) / 1000;
+    lastTime = timestamp;
+
+    update(deltaTime);
+    render();
+
+    requestAnimationFrame(gameLoop);
+}
 
 
 requestAnimationFrame(gameLoop);
