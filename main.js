@@ -19,6 +19,31 @@ const player = {
     vy: 0
 };
 
+//mouse-pos
+let mouseX = 0;
+let mouseY = 0;
+
+canvas.addEventListener("mousemove", (e) => {
+    const rect = canvas.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+});
+
+
+//bullets
+const bullets = [];
+canvas.addEventListener("click", (e) => {
+    const angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+
+    bullets.push({
+        x: player.x,
+        y: player.y,
+        vx: Math.cos(angle) * 400,
+        vy: Math.sin(angle) * 400,
+        radius: 5
+    });
+});
+
 //key-press
 const keys = {};
 
@@ -31,7 +56,7 @@ window.addEventListener("keyup", (e) => {
 });
 
 
-//game-timing
+//gameplay-loop
 let lastTime = 0;
 
 function gameLoop(timestamp) {
@@ -39,13 +64,14 @@ function gameLoop(timestamp) {
     lastTime = timestamp;
 
     update(deltaTime);
-    draw();
+    drawPlayer();
+    drawBullets();
 
     requestAnimationFrame(gameLoop);
 }
 
-//player
-function draw() {
+//player-spawn
+function drawPlayer() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.shadowBlur = 20;
@@ -59,7 +85,17 @@ function draw() {
     ctx.shadowBlur = 0;
 }
 
-//player-movement
+//bullets-spawn
+function drawBullets() {
+    bullets.forEach(bullet => {
+        ctx.beginPath();
+        ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+        ctx.fillStyle = "white";
+        ctx.fill();
+    });
+}
+
+//player-action
 function update(deltaTime) {
     player.vx = 0;
     player.vy = 0;
@@ -76,23 +112,20 @@ function update(deltaTime) {
         player.vy /= length;
     }
 
+    //player movement
     player.x += player.vx * player.speed * deltaTime;
     player.y += player.vy * player.speed * deltaTime;
     player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
     player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+
+    //bullet-shot
+    bullets.forEach(bullet => {
+        bullet.x += bullet.vx * deltaTime;
+        bullet.y += bullet.vy * deltaTime;
+    });
+    
 }
 
-
-//mouse-movement
-let mouse = {
-    x: canvas.width / 2,
-    y: canvas.height / 2
-};
-
-window.addEventListener("mousemove", (e) => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-});
 
 
 requestAnimationFrame(gameLoop);
