@@ -19,3 +19,8 @@ A minimalist canvas-based survival shooter built using HTML, CSS and Vanilla Jav
 - Vector normalization
 - Boundary clamping
 - Mouse tracking
+- Mouse-directed shooting
+- Bullet system with collision detection
+- Timed enemy spawning and chase behavior
+- Player health and game over state
+- Score tracking
