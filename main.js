@@ -60,6 +60,12 @@ window.addEventListener("keyup", (e) => {
     keys[e.key.toLowerCase()] = false;
 });
 
+//score
+let points = 0;
+
+//gameOver
+let gameOver = false;
+
 
 //player-spawn
 function drawPlayer() {
@@ -135,6 +141,7 @@ function updatePlayer(deltaTime){
     player.y += player.vy * player.speed * deltaTime;
     player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
     player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+
 }
 
 //updateBullets
@@ -172,10 +179,11 @@ function handleCollision(){
             if (isColliding(bullet, enemy)) {
                 enemies.splice(eIndex, 1);
                 bullets.splice(bIndex, 1);
+                points += 10;
             }
         });
     });
-    
+
     enemies.forEach((enemy, eIndex) => {
         if(isColliding(player, enemy)) {
             player.health -= 10;
@@ -194,16 +202,29 @@ function isColliding(a, b) {
     return distance < a.radius + b.radius;
 }
 
+//score-board
+function drawScoreBoard(points) {
+    ctx.fillStyle = "white";
+    ctx.font = "20px Arial";
+    ctx.fillText("Score: " + points, 20, 30);
+
+}
+
 
 //render-assets
 function render(){
     drawPlayer();
+    drawScoreBoard(points);
     drawBullets();
     drawEnemies();
 }
 
 //game-update
 function update(deltaTime) {
+    if(player.health <= 0) {
+        gameOver = true;
+    }
+
     updatePlayer(deltaTime);
     updateBullets(deltaTime);
     updateEnemies(deltaTime);
@@ -211,12 +232,25 @@ function update(deltaTime) {
     handleCollision();
 }
 
+//gameOVer-screen
+function drawGameOver() {
+    ctx.fillStyle = "white";
+    ctx.font = "48px Arial";
+    ctx.fillText("Game Over", canvas.width / 2 - 120, canvas.height / 2);
+}
+
+
 //gameplay-loop
 let lastTime = 0;
 
 function gameLoop(timestamp) {
     const deltaTime = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
+
+    if(gameOver) {
+        drawGameOver();
+        return;
+    }
 
     update(deltaTime);
     render();
