@@ -16,7 +16,8 @@ const player = {
     radius: 20,
     speed: 300,
     vx: 0,
-    vy: 0
+    vy: 0,
+    health: 100
 };
 
 //mouse-pos
@@ -46,11 +47,7 @@ canvas.addEventListener("click", (e) => {
 
 //enemies
 const enemies = [];
-enemies.push({
-    x: 100,
-    y: 100,
-    radius: 20
-});
+
 
 //key-press
 const keys = {};
@@ -99,6 +96,22 @@ function drawEnemies(){
     });
 }
 
+function spawnEnemy() {
+    const radius = 20;
+
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+
+    enemies.push({
+        x: x,
+        y: y,
+        radius: radius,
+        speed: 100
+    });
+}
+
+setInterval(spawnEnemy, 2000);
+
 
 //updatePlayer
 function updatePlayer(deltaTime){
@@ -133,6 +146,23 @@ function updateBullets(deltaTime){
         });
 }
 
+//updateEnemies
+function updateEnemies(deltaTime) {
+    enemies.forEach(enemy => {
+        const dx = player.x - enemy.x;
+        const dy = player.y - enemy.y;
+
+        const length = Math.sqrt(dx * dx + dy * dy);
+        if (length === 0) return;
+
+        const dirX = dx / length;
+        const dirY = dy / length;
+
+        enemy.x += dirX * enemy.speed * deltaTime;
+        enemy.y += dirY * enemy.speed * deltaTime;
+    });
+}
+
 
 //collisions
 function handleCollision(){
@@ -145,6 +175,14 @@ function handleCollision(){
             }
         });
     });
+    
+    enemies.forEach((enemy, eIndex) => {
+        if(isColliding(player, enemy)) {
+            player.health -= 10;
+            enemies.splice(eIndex, 1);
+        }
+    });
+    
 }
 
 //collision-check
@@ -168,7 +206,7 @@ function render(){
 function update(deltaTime) {
     updatePlayer(deltaTime);
     updateBullets(deltaTime);
-    //updateEnemies(deltaTime);
+    updateEnemies(deltaTime);
 
     handleCollision();
 }
