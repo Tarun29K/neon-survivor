@@ -65,6 +65,10 @@ window.addEventListener("keyup", (e) => {
     keys[e.key.toLowerCase()] = false;
 });
 
+window.addEventListener("click", () => {
+    if(gameOver) restartGame();
+});
+
 //score
 let points = 0;
 
@@ -288,23 +292,38 @@ function drawGameOver() {
     ctx.fillStyle = "white";
     ctx.font = "48px Arial";
     ctx.fillText("Game Over", canvas.width / 2 - 120, canvas.height / 2);
+    ctx.font = "24px Arial";
+    ctx.fillText("Score: " + points, canvas.width/2 - 50, canvas.height/2 + 40);
 }
 
+//restart
+function restartGame() {
+    bullets.length = 0;
+    enemies.length = 0;
+    points = 0;
+    player.health = 100;
+    gameOver = false;
+    lastTime = performance.now();
+
+    player.x = canvas.width / 2;
+    player.y = canvas.height / 2;
+    document.getElementById("scoreBoard").textContent = "Score: 0";
+    document.getElementById("healthBar").style.width = "100%";
+}
 
 //gameplay-loop
 let lastTime = 0;
 
 function gameLoop(timestamp) {
+    
     const deltaTime = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
 
-    if(gameOver) {
-        drawGameOver();
-        return;
-    }
+    if(!gameOver) {  
+        update(deltaTime);
+        render();
+    } else drawGameOver();
 
-    update(deltaTime);
-    render();
 
     requestAnimationFrame(gameLoop);
 }
