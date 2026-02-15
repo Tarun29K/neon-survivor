@@ -33,9 +33,14 @@ canvas.addEventListener("mousemove", (e) => {
 
 //bullets
 const bullets = [];
+let shootCooldown = 0;
+const shootDelay = 0.3;
+
 canvas.addEventListener("click", (e) => {
     const angle = Math.atan2(mouseY - player.y, mouseX - player.x);
 
+    if(shootCooldown > 0) return;
+    shootCooldown = shootDelay;
     bullets.push({
         x: player.x,
         y: player.y,
@@ -104,9 +109,22 @@ function drawEnemies(){
 
 function spawnEnemy() {
     const radius = 20;
+    let x,y;
+    const side = Math.floor(Math.random()*4);
 
-    const x = Math.random() * canvas.width;
-    const y = Math.random() * canvas.height;
+    if(side == 0) {
+        x = Math.random() * canvas.width;
+        y = -radius;
+    } else if (side == 1) {
+        x = canvas.width + radius;
+        y = Math.random() * canvas.height;
+    } else if (side == 2) {
+        x = Math.random() * canvas.width;
+        y = canvas.height + radius;
+    } else {
+        x = -radius;
+        y = Math.random() * canvas.height;
+    }
 
     enemies.push({
         x: x,
@@ -146,11 +164,15 @@ function updatePlayer(deltaTime){
 
 //updateBullets
 function updateBullets(deltaTime){
+    if(shootCooldown > 0) {
+        shootCooldown -= deltaTime;
+    }
+
     //bullet-shot
-        bullets.forEach(bullet => {
-            bullet.x += bullet.vx * deltaTime;
-            bullet.y += bullet.vy * deltaTime;
-        });
+    bullets.forEach(bullet => {
+        bullet.x += bullet.vx * deltaTime;
+        bullet.y += bullet.vy * deltaTime;
+    });
 }
 
 //updateEnemies
