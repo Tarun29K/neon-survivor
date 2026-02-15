@@ -72,6 +72,21 @@ let points = 0;
 let gameOver = false;
 
 
+//drawHealth
+function drawHealth() {
+    const barWidth = 200;
+    const barHeight = 20;
+
+    ctx.fillStyle = "red";
+    ctx.fillRect(20, 50, barWidth, barHeight);
+
+    ctx.fillStyle = "lime";
+    ctx.fillRect(20, 50, barWidth * (player.health / 100), barHeight);
+
+    ctx.strokeStyle = "white";
+    ctx.strokeRect(20, 50, barWidth, barHeight);
+}
+
 //player-spawn
 function drawPlayer() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -202,6 +217,17 @@ function updateEnemies(deltaTime) {
     });
 }
 
+//updateHealth
+function updateHealth() {
+    const healthBar = document.getElementById("healthBar");
+    healthBar.style.width = player.health + "%";
+}
+
+//updateScore
+function updateScore() {
+    const scoreBoard = document.getElementById("scoreBoard");
+    scoreBoard.textContent = "Score: " + points;
+}
 
 //collisions
 function handleCollision(){
@@ -212,6 +238,7 @@ function handleCollision(){
                 enemies.splice(eIndex, 1);
                 bullets.splice(bIndex, 1);
                 points += 10;
+                updateScore();
             }
         });
     });
@@ -219,6 +246,7 @@ function handleCollision(){
     enemies.forEach((enemy, eIndex) => {
         if(isColliding(player, enemy)) {
             player.health -= 10;
+            updateHealth();
             enemies.splice(eIndex, 1);
         }
     });
@@ -234,19 +262,10 @@ function isColliding(a, b) {
     return distance < a.radius + b.radius;
 }
 
-//score-board
-function drawScoreBoard(points) {
-    ctx.fillStyle = "white";
-    ctx.font = "20px Arial";
-    ctx.fillText("Score: " + points, 20, 30);
-
-}
-
 
 //render-assets
 function render(){
     drawPlayer();
-    drawScoreBoard(points);
     drawBullets();
     drawEnemies();
 }
