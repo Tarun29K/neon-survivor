@@ -32,7 +32,7 @@ canvas.addEventListener("mousemove", (e) => {
 
 
 //bullets
-const bullets = [];
+let bullets = [];
 let shootCooldown = 0;
 const shootDelay = 0.3;
 
@@ -173,10 +173,20 @@ function updateBullets(deltaTime){
         bullet.x += bullet.vx * deltaTime;
         bullet.y += bullet.vy * deltaTime;
     });
+
+    //cleanup
+    bullets = bullets.filter(bullet => {
+        return bullet.x > -50 && bullet.x < canvas.width + 50 && 
+        bullet.y > -50 && bullet.y < canvas.height + 50;
+    });
 }
 
 //updateEnemies
+let difficulty = 1;
+
 function updateEnemies(deltaTime) {
+    difficulty += deltaTime * 0.05;
+
     enemies.forEach(enemy => {
         const dx = player.x - enemy.x;
         const dy = player.y - enemy.y;
@@ -187,8 +197,8 @@ function updateEnemies(deltaTime) {
         const dirX = dx / length;
         const dirY = dy / length;
 
-        enemy.x += dirX * enemy.speed * deltaTime;
-        enemy.y += dirY * enemy.speed * deltaTime;
+        enemy.x += dirX * enemy.speed * difficulty * deltaTime;
+        enemy.y += dirY * enemy.speed * difficulty * deltaTime;
     });
 }
 
