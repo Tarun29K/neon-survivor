@@ -75,6 +75,9 @@ let points = 0;
 //damage
 let shakeIntensity = 0;
 
+//particles
+let particles = [];
+
 //gameOver
 let gameOver = false;
 
@@ -124,7 +127,9 @@ function drawEnemies(){
     enemies.forEach(enemy => {
         ctx.beginPath();
         ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI*2);
-        ctx.fillStyle = "red";
+
+        if(enemy.hitFlash > 0) ctx.fillStyle = "white";
+        else ctx.fillStyle = "red";
         ctx.fill();
     });
 }
@@ -152,11 +157,38 @@ function spawnEnemy() {
         x: x,
         y: y,
         radius: radius,
-        speed: 100
+        health: 2,
+        speed: 100,
+        hitFlash: 0
     });
 }
 
 setInterval(spawnEnemy, 2000);
+
+//drawParticles
+function drawParticles() {
+    ctx.fillStyle = "orange";
+
+    for (let p of particles) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+//spawnParticles
+function spawnParticles(x, y) {
+    for(var i = 0; i < 6; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 300,
+            vy: (Math.random() - 0.5) * 300,
+            life: 0.3
+        });
+    }
+    
+}
 
 
 //updatePlayer
@@ -207,7 +239,7 @@ function updateBullets(deltaTime){
 let difficulty = 1;
 
 function updateEnemies(deltaTime) {
-    difficulty += deltaTime * 0.05;
+    difficulty += deltaTime * 0.025;
 
     enemies.forEach(enemy => {
         const dx = player.x - enemy.x;
@@ -221,6 +253,8 @@ function updateEnemies(deltaTime) {
 
         enemy.x += dirX * enemy.speed * difficulty * deltaTime;
         enemy.y += dirY * enemy.speed * difficulty * deltaTime;
+
+        if(enemy.hitFlash > 0) enemy.hitFlash -= deltaTime;
     });
 }
 
@@ -236,20 +270,41 @@ function updateScore() {
     scoreBoard.textContent = "Score: " + points;
 }
 
+//updateParticles
+function updateParticles(deltaTime) {
+    for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        p.x += p.vx * deltaTime;
+        p.y += p.vy * deltaTime;
+        p.life -= deltaTime;
+        if (p.life <= 0) {
+            particles.splice(i, 1);
+        }
+    }
+}
+
+
 //collisions
 function handleCollision(){
 
     bullets.forEach((bullet, bIndex) => {
         enemies.forEach((enemy, eIndex) => {
             if (isColliding(bullet, enemy)) {
-                enemies.splice(eIndex, 1);
                 bullets.splice(bIndex, 1);
-                points += 10;
-                updateScore();
+                enemy.health--;
+                enemy.hitFlash = 0.05;
+                //enemy-death
+                if(enemy.health <= 0){
+                    enemies.splice(eIndex, 1);
+                    points += 10;
+                    updateScore();
+                    spawnParticles(enemy.x, enemy.y);
+                    
+                }
             }
         });
     });
-
+    //player-collision
     enemies.forEach((enemy, eIndex) => {
         if(isColliding(player, enemy)) {
             player.health -= 10;
@@ -276,6 +331,7 @@ function render(){
     drawPlayer();
     drawBullets();
     drawEnemies();
+    drawParticles();
 }
 
 //game-update
@@ -283,13 +339,15 @@ function update(deltaTime) {
     if(player.health <= 0) {
         gameOver = true;
     }
-    if(player.health >= 50) shakeIntensity *= 0.5;
-    else shakeIntensity *= 0.9;
+    if(player.health >= 60) shakeIntensity *= 0.3;
+    else if(player.health <= 30) shakeIntensity *= 0.9;
+    else shakeIntensity *= 0.6;
     if (shakeIntensity < 0.1) shakeIntensity = 0;
 
     updatePlayer(deltaTime);
     updateBullets(deltaTime);
     updateEnemies(deltaTime);
+    updateParticles(deltaTime);
 
     handleCollision();
 }
@@ -300,7 +358,7 @@ function damageShake() {
     ctx.translate(shakeX, shakeY);
 }  
 
-//gameOVer-screen
+//gameOver-screen
 function drawGameOver() {
     ctx.fillStyle = "white";
     ctx.font = "48px Arial";
