@@ -72,6 +72,9 @@ window.addEventListener("click", () => {
 //score
 let points = 0;
 
+//damage
+let shakeIntensity = 0;
+
 //gameOver
 let gameOver = false;
 
@@ -250,6 +253,7 @@ function handleCollision(){
     enemies.forEach((enemy, eIndex) => {
         if(isColliding(player, enemy)) {
             player.health -= 10;
+            shakeIntensity = 10;
             updateHealth();
             enemies.splice(eIndex, 1);
         }
@@ -279,6 +283,9 @@ function update(deltaTime) {
     if(player.health <= 0) {
         gameOver = true;
     }
+    if(player.health >= 50) shakeIntensity *= 0.5;
+    else shakeIntensity *= 0.9;
+    if (shakeIntensity < 0.1) shakeIntensity = 0;
 
     updatePlayer(deltaTime);
     updateBullets(deltaTime);
@@ -286,6 +293,12 @@ function update(deltaTime) {
 
     handleCollision();
 }
+
+function damageShake() {
+    const shakeX = (Math.random() - 0.5) * shakeIntensity;
+    const shakeY = (Math.random() - 0.5) * shakeIntensity;
+    ctx.translate(shakeX, shakeY);
+}  
 
 //gameOVer-screen
 function drawGameOver() {
@@ -304,6 +317,7 @@ function restartGame() {
     player.health = 100;
     gameOver = false;
     lastTime = performance.now();
+    shakeIntensity = 0;
 
     player.x = canvas.width / 2;
     player.y = canvas.height / 2;
@@ -321,7 +335,10 @@ function gameLoop(timestamp) {
 
     if(!gameOver) {  
         update(deltaTime);
+        ctx.save();
+        damageShake();
         render();
+        ctx.restore();
     } else drawGameOver();
 
 
