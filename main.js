@@ -72,6 +72,9 @@ window.addEventListener("click", () => {
 //score
 let points = 0;
 
+//Hi-Score
+let hiScore = 0;
+
 //damage
 let shakeIntensity = 0;
 
@@ -360,11 +363,22 @@ function damageShake() {
 
 //gameOver-screen
 function drawGameOver() {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
     ctx.fillStyle = "white";
-    ctx.font = "48px Arial";
+    ctx.font = "bold 48px Arial";
     ctx.fillText("Game Over", canvas.width / 2 - 120, canvas.height / 2);
+
     ctx.font = "24px Arial";
-    ctx.fillText("Score: " + points, canvas.width/2 - 50, canvas.height/2 + 40);
+    ctx.fillText("Score: " + points, canvas.width/2 - 45, canvas.height/2 + 40);
+
+    if(points > hiScore) hiScore = points;
+    ctx.font = "20px Arial";
+    ctx.fillText("Hi-Score: " + hiScore, canvas.width / 2 - 50, canvas.height / 2 + 70);
+
+    ctx.font = "20px Arial";
+    ctx.fillText("Click anywhere to restart", canvas.width / 2 - 105, canvas.height / 2 + 110);
 }
 
 //restart
