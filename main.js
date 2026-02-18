@@ -9,6 +9,14 @@ window.addEventListener("resize", () => {
     canvas.height = window.innerHeight;
 });
 
+//sounds
+const bgm = new Audio("./sounds/arcade-music-loop.wav");
+const shoot = new Audio("./sounds/peow-gun-shot.wav");
+const hit = new Audio("./sounds/retro-hurt.mp3");
+const explosion = new Audio("./sounds/synth-impact.wav");
+
+
+
 //player
 const player = {
     x: canvas.width / 2,
@@ -41,6 +49,9 @@ canvas.addEventListener("click", (e) => {
 
     if(shootCooldown > 0) return;
     shootCooldown = shootDelay;
+    shoot.currentTime = 0;
+    shoot.volume = 0.3;
+    shoot.play();
     bullets.push({
         x: player.x,
         y: player.y,
@@ -229,6 +240,7 @@ function updateBullets(deltaTime){
     bullets.forEach(bullet => {
         bullet.x += bullet.vx * deltaTime;
         bullet.y += bullet.vy * deltaTime;
+
     });
 
     //cleanup
@@ -300,6 +312,9 @@ function handleCollision(){
                 if(enemy.health <= 0){
                     enemies.splice(eIndex, 1);
                     points += 10;
+                    explosion.currentTime = 0;
+                    explosion.volume = 0.5;
+                    explosion.play();
                     updateScore();
                     spawnParticles(enemy.x, enemy.y);
                     
@@ -312,6 +327,8 @@ function handleCollision(){
         if(isColliding(player, enemy)) {
             player.health -= 10;
             shakeIntensity = 10;
+            hit.currentTime = 0;
+            hit.play();
             updateHealth();
             enemies.splice(eIndex, 1);
         }
@@ -341,6 +358,7 @@ function render(){
 function update(deltaTime) {
     if(player.health <= 0) {
         gameOver = true;
+        bgm.pause();
     }
     if(player.health >= 60) shakeIntensity *= 0.3;
     else if(player.health <= 30) shakeIntensity *= 0.9;
@@ -390,6 +408,8 @@ function restartGame() {
     gameOver = false;
     lastTime = performance.now();
     shakeIntensity = 0;
+    bgm.currentTime = 0;
+    playBGM();
 
     player.x = canvas.width / 2;
     player.y = canvas.height / 2;
@@ -397,15 +417,23 @@ function restartGame() {
     document.getElementById("healthBar").style.width = "100%";
 }
 
+//play-bgm
+function playBGM() {
+    bgm.loop = true;
+    bgm.volume = 0.20;
+    bgm.play();
+}
+
 //gameplay-loop
 let lastTime = 0;
 
 function gameLoop(timestamp) {
-    
+
     const deltaTime = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
 
     if(!gameOver) {  
+        playBGM();
         update(deltaTime);
         ctx.save();
         damageShake();
