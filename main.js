@@ -9,12 +9,27 @@ window.addEventListener("resize", () => {
     canvas.height = window.innerHeight;
 });
 
+//gameState
+let gameState = "start";
+
+//score
+let points = 0;
+
+//Hi-Score
+let hiScore = 0;
+
+//damage
+let shakeIntensity = 0;
+
+//particles
+let particles = [];
+
+
 //sounds
 const bgm = new Audio("./sounds/arcade-music-loop.wav");
 const shoot = new Audio("./sounds/peow-gun-shot.wav");
 const hit = new Audio("./sounds/retro-hurt.mp3");
 const explosion = new Audio("./sounds/synth-impact.wav");
-
 
 
 //player
@@ -76,24 +91,18 @@ window.addEventListener("keyup", (e) => {
     keys[e.key.toLowerCase()] = false;
 });
 
+
 window.addEventListener("click", () => {
-    if(gameOver) restartGame();
+
+    if (gameState === "start") {
+        restartGame();
+        gameState = "playing";
+    }
+    else if (gameState === "gameOver") {
+        restartGame();
+        gameState = "playing";
+    }
 });
-
-//score
-let points = 0;
-
-//Hi-Score
-let hiScore = 0;
-
-//damage
-let shakeIntensity = 0;
-
-//particles
-let particles = [];
-
-//gameOver
-let gameOver = false;
 
 
 //drawHealth
@@ -357,7 +366,7 @@ function render(){
 //game-update
 function update(deltaTime) {
     if(player.health <= 0) {
-        gameOver = true;
+        gameState = "gameOver";
         bgm.pause();
     }
     if(player.health >= 60) shakeIntensity *= 0.3;
@@ -378,6 +387,26 @@ function damageShake() {
     const shakeY = (Math.random() - 0.5) * shakeIntensity;
     ctx.translate(shakeX, shakeY);
 }  
+
+//start-screen
+function drawStartScreen() {
+
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "cyan";
+    ctx.textAlign = "center";
+
+    ctx.font = "60px Orbitron, sans-serif";
+    ctx.fillText("NEON SURVIVOR", canvas.width/2, canvas.height/2 - 60);
+
+    ctx.font = "24px Orbitron, sans-serif";
+    ctx.fillText("Click to Start", canvas.width/2, canvas.height/2 + 20);
+
+    ctx.font = "18px Orbitron, sans-serif";
+    ctx.fillText("Move: Mouse | Shoot: Click", canvas.width/2, canvas.height/2 + 60);
+}
+
 
 //gameOver-screen
 function drawGameOver() {
@@ -405,7 +434,7 @@ function restartGame() {
     enemies.length = 0;
     points = 0;
     player.health = 100;
-    gameOver = false;
+    gameState = "start";
     lastTime = performance.now();
     shakeIntensity = 0;
     bgm.currentTime = 0;
@@ -432,14 +461,16 @@ function gameLoop(timestamp) {
     const deltaTime = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
 
-    if(!gameOver) {  
+    if(gameState === "start") {
+        drawStartScreen();
+    } else if (gameState === "playing") {
         playBGM();
         update(deltaTime);
         ctx.save();
         damageShake();
         render();
         ctx.restore();
-    } else drawGameOver();
+     } else if(gameState === "gameOver") drawGameOver();
 
 
     requestAnimationFrame(gameLoop);
