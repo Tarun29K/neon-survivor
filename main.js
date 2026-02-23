@@ -24,6 +24,18 @@ let shakeIntensity = 0;
 //particles
 let particles = [];
 
+//startscreen-glow
+let glowTime = 0;
+
+//start-button
+let startButton = {
+    x: canvas.width/2-100,
+    y: canvas.height/2,
+    width: 200,
+    height: 60,
+    hovered: false
+};
+
 
 //sounds
 const bgm = new Audio("./sounds/arcade-music-loop.wav");
@@ -51,6 +63,12 @@ canvas.addEventListener("mousemove", (e) => {
     const rect = canvas.getBoundingClientRect();
     mouseX = e.clientX - rect.left;
     mouseY = e.clientY - rect.top;
+
+    startButton.hovered =
+        mouseX >= startButton.x &&
+        mouseX <= startButton.x + startButton.width &&
+        mouseY >= startButton.y &&
+        mouseY <= startButton.y + startButton.height;
 });
 
 
@@ -60,20 +78,22 @@ let shootCooldown = 0;
 const shootDelay = 0.3;
 
 canvas.addEventListener("click", (e) => {
-    const angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+    if(gameState === "playing") {
+        const angle = Math.atan2(mouseY - player.y, mouseX - player.x);
 
-    if(shootCooldown > 0) return;
-    shootCooldown = shootDelay;
-    shoot.currentTime = 0;
-    shoot.volume = 0.3;
-    shoot.play();
-    bullets.push({
-        x: player.x,
-        y: player.y,
-        vx: Math.cos(angle) * 400,
-        vy: Math.sin(angle) * 400,
-        radius: 5
-    });
+        if(shootCooldown > 0) return;
+        shootCooldown = shootDelay;
+        shoot.currentTime = 0;
+        shoot.volume = 0.3;
+        shoot.play();
+        bullets.push({
+            x: player.x,
+            y: player.y,
+            vx: Math.cos(angle) * 400,
+            vy: Math.sin(angle) * 400,
+            radius: 5
+        });
+    }
 });
 
 //enemies
@@ -94,7 +114,7 @@ window.addEventListener("keyup", (e) => {
 
 window.addEventListener("click", () => {
 
-    if (gameState === "start") {
+    if (gameState === "start" && startButton.hovered) {
         restartGame();
         gameState = "playing";
     }
@@ -388,23 +408,69 @@ function damageShake() {
     ctx.translate(shakeX, shakeY);
 }  
 
+
+//drawStartButton
+function drawStartButton() {
+    ctx.save();
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "32px Orbitron";
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2 + 15;
+
+    ctx.shadowColor = "cyan";
+    ctx.shadowBlur = startButton.hovered ? 35 : 15;
+
+    ctx.fillStyle = "cyan";
+
+    ctx.fillText("START", centerX, centerY);
+
+    ctx.restore();
+}
+
+//instructions
+function drawInstructions() {
+    ctx.save();
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "18px Orbitron sans serif";
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2 + 60;
+
+    ctx.shadowColor = "cyan";
+    ctx.fillStyle = "cyan";
+
+    ctx.fillText("Move: Mouse | Shoot: Click", centerX, centerY);
+
+    ctx.restore();
+}
+
+
 //start-screen
 function drawStartScreen() {
 
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    const glow = 20 + Math.sin(glowTime * 3) * 10;
+
+    ctx.save();
+
     ctx.fillStyle = "cyan";
     ctx.textAlign = "center";
-
+    ctx.shadowColor = "cyan";
+    ctx.shadowBlur = glow;
     ctx.font = "60px Orbitron, sans-serif";
     ctx.fillText("NEON SURVIVOR", canvas.width/2, canvas.height/2 - 60);
 
-    ctx.font = "24px Orbitron, sans-serif";
-    ctx.fillText("Click to Start", canvas.width/2, canvas.height/2 + 20);
+    ctx.restore();
 
-    ctx.font = "18px Orbitron, sans-serif";
-    ctx.fillText("Move: Mouse | Shoot: Click", canvas.width/2, canvas.height/2 + 60);
+    drawStartButton();
+    drawInstructions();
 }
 
 
@@ -462,6 +528,7 @@ function gameLoop(timestamp) {
     lastTime = timestamp;
 
     if(gameState === "start") {
+        glowTime += deltaTime;
         drawStartScreen();
     } else if (gameState === "playing") {
         playBGM();
